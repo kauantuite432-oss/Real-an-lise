@@ -1,0 +1,448 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RealAnalytica HD - Cédulas e Moedas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            gold: {
+              300: '#FDE047',
+              400: '#FACC15',
+              500: '#EAB308',
+              600: '#CA8A04',
+              700: '#A16207',
+            }
+          },
+          boxShadow: {
+            'phone': '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 10px #1e293b, 0 0 0 12px #334155',
+            'glow-uv': '0 0 35px 8px rgba(168, 85, 247, 0.6)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .phone-container {
+      width: 100%;
+      max-width: 420px;
+      height: 860px;
+      max-height: 96vh;
+    }
+
+    @media (max-width: 640px) {
+      .phone-container {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.8); }
+    ::-webkit-scrollbar-thumb { background: rgba(234, 179, 8, 0.4); border-radius: 4px; }
+
+    /* UV Effect Lens */
+    .uv-scanner {
+      background: radial-gradient(circle 110px at var(--uv-x, 50%) var(--uv-y, 50%), 
+                  rgba(192, 132, 252, 0.6) 0%, 
+                  rgba(126, 34, 206, 0.85) 45%, 
+                  rgba(15, 23, 42, 0.98) 85%);
+      mix-blend-mode: hard-light;
+    }
+
+    /* Magnifier Zoom Lens */
+    .magnifier-lens {
+      pointer-events: none;
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 3px solid #facc15;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(255,255,255,0.3);
+      display: none;
+      background-repeat: no-repeat;
+      z-index: 40;
+    }
+
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes coinSpin {
+      0% { transform: rotateY(0deg); }
+      50% { transform: rotateY(180deg); }
+      100% { transform: rotateY(360deg); }
+    }
+    .animate-coin {
+      animation: coinSpin 8s infinite linear;
+      transform-style: preserve-3d;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen text-slate-100 p-0 sm:p-3">
+
+  <!-- FRAME DO SMARTPHONE -->
+  <div class="phone-container bg-slate-950 sm:rounded-[44px] shadow-phone relative flex flex-col overflow-hidden border-0 sm:border-4 border-slate-700">
+    
+    <!-- TOP BAR (NOTCH E STATUS) -->
+    <div class="flex items-center justify-between px-6 pt-3 pb-2 bg-slate-950 text-xs text-slate-400 select-none z-50">
+      <span class="font-bold font-mono text-slate-200" id="current-time">12:00</span>
+      <div class="w-20 h-4 bg-slate-900 rounded-full flex items-center justify-center border border-slate-800">
+        <div class="w-3 h-3 rounded-full bg-slate-950 flex items-center justify-center">
+          <div class="w-1.5 h-1.5 rounded-full bg-blue-900"></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+        <i data-lucide="battery" class="w-3.5 h-3.5 text-emerald-400"></i>
+      </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="relative flex-1 flex flex-col overflow-hidden">
+
+      <!-- 1. CAPA DE ABERTURA (SPLASH SCREEN MOEDA 1 REAL) -->
+      <section id="splash-screen" class="absolute inset-0 z-40 flex flex-col justify-between p-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 transition-all duration-500">
+        
+        <div class="text-center pt-4 space-y-1">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-semibold uppercase tracking-wider">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            Casa da Moeda & BCB
+          </div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-white mt-2">
+            Real<span class="text-gold-400">Analytica HD</span>
+          </h1>
+          <p class="text-xs text-slate-400">Inspeção Oficial do Dinheiro Brasileiro</p>
+        </div>
+
+        <!-- MOEDA DE 1 REAL SVG ULTRA-REALISTA -->
+        <div class="relative flex flex-col items-center justify-center py-4 cursor-pointer" onclick="playCoinSound();">
+          <div class="absolute w-56 h-56 bg-gold-500/10 rounded-full filter blur-3xl"></div>
+          
+          <div class="w-52 h-52 relative drop-shadow-[0_15px_25px_rgba(0,0,0,0.8)] animate-coin hover:scale-105 transition-transform">
+            <!-- SVG MOEDA 1 REAL -->
+            <svg viewBox="0 0 200 200" class="w-full h-full">
+              <defs>
+                <radialGradient id="ringGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#EAB308" />
+                  <stop offset="70%" stop-color="#CA8A04" />
+                  <stop offset="100%" stop-color="#854D0E" />
+                </radialGradient>
+                <radialGradient id="coreGrad" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stop-color="#F8FAFC" />
+                  <stop offset="60%" stop-color="#CBD5E1" />
+                  <stop offset="100%" stop-color="#64748B" />
+                </radialGradient>
+              </defs>
+              <!-- Anel Externo Dourado -->
+              <circle cx="100" cy="100" r="96" fill="url(#ringGrad)" stroke="#FEF08A" stroke-width="2"/>
+              <circle cx="100" cy="100" r="95" fill="none" stroke="#713F12" stroke-width="1.5" stroke-dasharray="3,2"/>
+              <!-- Grafismo Indígena no Anel -->
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#A16207" stroke-width="6" stroke-linecap="round" opacity="0.4"/>
+              <!-- Núcleo Inox -->
+              <circle cx="100" cy="100" r="62" fill="url(#coreGrad)" stroke="#475569" stroke-width="2"/>
+              <!-- Valor 1 REAL e Ano -->
+              <text x="100" y="92" font-family="Plus Jakarta Sans" font-weight="900" font-size="44" fill="#1E293B" text-anchor="middle">1</text>
+              <text x="100" y="112" font-family="Plus Jakarta Sans" font-weight="800" font-size="16" fill="#334155" text-anchor="middle" letter-spacing="2">REAL</text>
+              <text x="100" y="128" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#475569" text-anchor="middle">2024</text>
+              <!-- Constelação do Cruzeiro do Sul -->
+              <g fill="#475569" opacity="0.7">
+                <circle cx="130" cy="70" r="2.5"/><circle cx="142" cy="80" r="2.5"/><circle cx="130" cy="95" r="2.5"/><circle cx="118" cy="80" r="2.5"/>
+              </g>
+            </svg>
+          </div>
+
+          <span class="mt-4 text-[11px] font-mono text-gold-400 bg-gold-500/10 border border-gold-500/20 px-3 py-1 rounded-full flex items-center gap-1.5">
+            <i data-lucide="touch-portal" class="w-3.5 h-3.5"></i> Toque na moeda para ouvir o som
+          </span>
+        </div>
+
+        <div class="space-y-3 pb-2">
+          <div class="glass-panel p-3.5 rounded-2xl text-xs space-y-1 text-slate-300 border border-slate-800">
+            <div class="flex justify-between font-bold text-white">
+              <span>Coleção Completa</span>
+              <span class="text-gold-400 font-mono">7 Cédulas oficiais</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-snug">
+              Exibição vetorizada em alta definição das cédulas brasileiras com simulador de luz ultravioleta e microscópio numismático.
+            </p>
+          </div>
+
+          <button onclick="enterApp()" class="w-full py-3.5 bg-gradient-to-r from-gold-500 via-amber-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-slate-950 font-extrabold rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 text-sm">
+            <span>Acessar Coleção de Cédulas</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. GALERIA PRINCIPAL DE CÉDULAS -->
+      <section id="main-app" class="absolute inset-0 z-30 flex flex-col bg-slate-950 transition-all duration-300 opacity-0 pointer-events-none">
+        
+        <!-- Navbar -->
+        <header class="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between sticky top-0 z-20">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-gold-400">
+              <i data-lucide="banknote" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-xs font-bold text-white uppercase tracking-wider">Cédulas do Brasil</h2>
+              <p class="text-[10px] text-slate-400">2ª Família do Real</p>
+            </div>
+          </div>
+
+          <button onclick="resetToSplash()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">
+            <i data-lucide="home" class="w-4 h-4"></i>
+          </button>
+        </header>
+
+        <!-- Lista Scrollável de Cédulas -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4" id="notes-container">
+          <!-- As cédulas serão renderizadas via JavaScript -->
+        </div>
+
+      </section>
+
+      <!-- 3. MODAL DE INSPEÇÃO HD (DETALHES, FRENTE/VERSO, LUPA E UV) -->
+      <section id="inspection-modal" class="absolute inset-0 z-50 bg-slate-950 flex flex-col transition-all duration-300 opacity-0 pointer-events-none translate-y-full">
+        
+        <!-- Header Inspeção -->
+        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between z-30">
+          <button onclick="closeInspection()" class="p-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i> Voltar
+          </button>
+
+          <div class="text-center">
+            <h3 class="text-xs font-bold text-white uppercase" id="modal-title">Cédula R$ --</h3>
+            <p class="text-[10px] text-slate-400" id="modal-subtitle">Inspeção Detalhada</p>
+          </div>
+
+          <button onclick="toggleUV()" id="uv-btn" class="px-2.5 py-1.5 rounded-xl bg-purple-900/50 border border-purple-500/50 text-purple-300 text-xs font-bold flex items-center gap-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i> UV
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+          
+          <!-- DISPLAY DE CÉDULA VETORIAL INTERATIVA COM LUPA & MODO UV -->
+          <div class="relative bg-slate-900 rounded-2xl p-3 border border-slate-800 overflow-hidden" id="card-display-area">
+            
+            <div id="uv-tag" class="hidden absolute top-4 left-4 z-30 bg-purple-950/90 border border-purple-400 text-purple-200 text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1 animate-pulse">
+              <span class="w-2 h-2 rounded-full bg-purple-400"></span> Modo Ultravioleta Ativo
+            </div>
+
+            <!-- Moldura da Nota com Suporte a Zoom/UV -->
+            <div class="relative w-full h-48 sm:h-56 rounded-xl bg-slate-950 overflow-hidden flex items-center justify-center cursor-crosshair border border-slate-800" id="interactive-note-box">
+              
+              <!-- Container da Nota Renderizada em SVG -->
+              <div id="svg-note-holder" class="w-full h-full flex items-center justify-center p-2 transition-transform duration-300">
+                <!-- SVG Dinâmico -->
+              </div>
+
+              <!-- Camada UV Overlay -->
+              <div id="uv-overlay" class="uv-scanner absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center">
+                <div class="border-2 border-dashed border-purple-300/80 p-3 rounded-xl bg-purple-950/40 text-center backdrop-blur-xs">
+                  <p class="text-[11px] font-mono font-bold text-purple-200" id="uv-text-info">
+                    Fibras luminosas e numeração fluorescente detectadas.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Lupa de Zoom HD -->
+              <div id="magnifier" class="magnifier-lens"></div>
+            </div>
+
+            <!-- Controles do Display -->
+            <div class="flex items-center justify-between mt-3 text-xs">
+              <button onclick="flipSide()" class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-gold-400 font-bold flex items-center gap-1.5 hover:bg-slate-700">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                Ver <span id="side-label-btn">VERSO (Animal)</span>
+              </button>
+
+              <span class="text-[10px] text-slate-400 flex items-center gap-1">
+                <i data-lucide="search" class="w-3 h-3 text-gold-400"></i> Passe o dedo/mouse para Zoom
+              </span>
+            </div>
+
+          </div>
+
+          <!-- TAB DE DADOS TÉCNICOS -->
+          <div class="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
+            <h4 class="text-xs font-bold text-gold-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="info" class="w-4 h-4"></i> Ficha Técnica e Biologia
+            </h4>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Animal Ilustrado</span>
+                <p class="font-bold text-white mt-0.5" id="info-animal">--</p>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Nome Científico</span>
+                <p class="font-bold text-slate-300 italic mt-0.5" id="info-scientific">--</p>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Dimensões</span>
+                <p class="font-bold text-white mt-0.5" id="info-size">--</p>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase font-mono">Cor Predominante</span>
+                <p class="font-bold text-white mt-0.5" id="info-color">--</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
+              <span class="text-[10px] text-gold-400 uppercase font-mono font-bold">Elementos de Segurança</span>
+              <ul class="list-disc list-inside text-slate-300 space-y-1 text-[11px]" id="info-security">
+                <!-- Injetado via JS -->
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <nav class="bg-slate-950 border-t border-slate-800 px-6 py-2.5 flex items-center justify-around z-20">
+      <button onclick="resetToSplash()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-gold-400">
+        <i data-lucide="disc" class="w-4 h-4"></i>
+        <span class="text-[9px] font-semibold">1 Real</span>
+      </button>
+      <button onclick="showMainApp()" class="flex flex-col items-center gap-1 text-gold-400">
+        <i data-lucide="layers" class="w-4 h-4"></i>
+        <span class="text-[9px] font-semibold">Cédulas</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    
+    // BANCO DE DADOS COMPLETO E OFICIAL DAS CÉDULAS
+    const BANKNOTES_DATA = [
+      {
+        id: '2reais',
+        value: 2,
+        title: '2 Reais',
+        colorName: 'Azul e Cinza',
+        primaryBg: '#1e3a8a',
+        accentBg: '#3b82f6',
+        textColor: '#93c5fd',
+        size: '121 mm x 65 mm',
+        animal: 'Tartaruga Marinha',
+        scientific: 'Chelonia mydas',
+        faunaEmoji: '🐢',
+        uvText: 'Fluorescência azulada no número 2 e fibras luminescentes visíveis.',
+        security: [
+          'Marca-d\'água da Tartaruga Marinha e número 2',
+          'Quebra-cabeça do número 2 visível contra a luz',
+          'Impressão em alto-relevo tátil',
+          'Microimpressões com a palavra "2 REAIS"'
+        ]
+      },
+      {
+        id: '5reais',
+        value: 5,
+        title: '5 Reais',
+        colorName: 'Violeta e Lilás',
+        primaryBg: '#581c87',
+        accentBg: '#a855f7',
+        textColor: '#e9d5ff',
+        size: '128 mm x 65 mm',
+        animal: 'Garça',
+        scientific: 'Ardea alba',
+        faunaEmoji: '🦩',
+        uvText: 'Fios fluorescentes violetas e numeração 5 destacada em amarelo-esverdeado.',
+        security: [
+          'Marca-d\'água da Garça-branca-grande',
+          'Quebra-cabeça com encaixe perfeito do número 5',
+          'Alto-relevo na Efigie da República',
+          'Elementos de identificação tátil nas extremidades'
+        ]
+      },
+      {
+        id: '10reais',
+        value: 10,
+        title: '10 Reais',
+        colorName: 'Vermelho e Rosa',
+        primaryBg: '#9f1239',
+        accentBg: '#f43f5e',
+        textColor: '#fecdd3',
+        size: '135 mm x 65 mm',
+        animal: 'Arara-Vermelha',
+        scientific: 'Ara chloropterus',
+        faunaEmoji: '🦜',
+        uvText: 'Plumagem da Arara reluz sob UV com o número 10 brilhante.',
+        security: [
+          'Marca-d\'água da Arara-Vermelha e número 10',
+          'Fio de segurança escuro embutido',
+          'Impressão tátil e relevos de segurança',
+          'Microimpressões de alta precisão'
+        ]
+      },
+      {
+        id: '20reais',
+        value: 20,
+        title: '20 Reais',
+        colorName: 'Amarelo e Laranja',
+        primaryBg: '#854d0e',
+        accentBg: '#eab308',
+        textColor: '#fef08a',
+        size: '142 mm x 65 mm',
+        animal: 'Mico-Leão-Dourado',
+        scientific: 'Leontopithecus rosalia',
+        faunaEmoji: '🐒',
+        uvText: 'Número 20 altera para verde reluzente e revela símbolos ocultos.',
+        security: [
+          'Número que muda de cor (magia óptica de azul para verde)',
+          'Marca-d\'água do Mico-Leão-Dourado',
+          'Fio de segurança tridimensional',
+          'Papel de algodão com textura tátil exclusiva'
+        ]
+      },
+      {
+        id: '50reais',
+        value: 50,
+        title: '50 Reais',
+        colorName: 'Marrom e Dourado',
+        primaryBg: '#78350f',
+        accentBg: '#d97706',
+        textColor: '#fde68a',
+        size: '149 mm x 70 mm',
+        animal: 'Onça-Pintada',
+        scientific: 'Panthera onca',
+        faunaEmoji: '🐆',
+        uvText: 'Pelagem da Onça com padrão fluorescente em alta definição.',
+        security: [
+          'Número passante holográfico com brilho de bronze para verde',
+          'Marca-d\'água da Onça-Pintada',
+   
